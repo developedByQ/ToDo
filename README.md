@@ -13,4 +13,4 @@ Priority Legend:
 - High: Red
 - ASAP: Black
 
-<img src="https://imgflip.com/gif/75hd70" alt="gif"/>
+https://imgflip.com/gif/75hd70
