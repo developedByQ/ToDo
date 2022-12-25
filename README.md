@@ -13,4 +13,4 @@ Priority Legend:
 - High: Red
 - ASAP: Black
 
-<a href="https://imgur.com/a/QekOvmx"<img src="https://imgur.com/a/QekOvmx.gif" title="Made using Imgur"/></a>
+<a href="https://imgur.com/a/QekOvmx"<img src="https://imgur.com/a/QekOvmx.gif"/></a>
