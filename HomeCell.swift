@@ -60,6 +60,7 @@ class HomeCell: UITableViewCell {
         contentView.layer.cornerRadius = 5
         contentView.layer.masksToBounds = true
     }
+     
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -69,7 +70,7 @@ class HomeCell: UITableViewCell {
         super.layoutSubviews()
         self.selectionStyle = .none
         contentView.frame = contentView.frame.inset(by:  UIEdgeInsets(top: 20, left: 0, bottom: 10, right: 0))
-        timestampLabel.frame = CGRect(x: contentView.frame.size.width - 70, y: 10, width: 100, height: 20)
+        timestampLabel.frame = CGRect(x: contentView.frame.size.width - 120, y: 10, width: 100, height: 20)
         taskTitleLabel.frame = CGRect(x: 20, y: 10, width: 250, height: 30)
         pill.frame = CGRect(x: 20, y: 40, width: 60, height: 20)
         taskDescriptionLabel.frame = CGRect(x: 20, y: 45, width: 350, height: 90)

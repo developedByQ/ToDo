@@ -6,47 +6,33 @@
 //
 
 import UIKit
+import FirebaseFirestore
 
 enum Priority {
     case low, medium, high, asap
 }
+
 struct Task {
     let timestamp: String!
     let taskTitle: String!
     let taskDescription: String?
     let priority: Priority!
-    
 }
+
 class Home: UIViewController {
 
     let tableView = UITableView()
     
     var safeArea: UILayoutGuide!
-    let tasks =
-        [
-            Task(timestamp: "5:00pm", taskTitle: "First Task", taskDescription: "The first task of today will be basic choirs. It has the lowest priority accepted.", priority: Priority.low),
-            Task(timestamp: "6:00pm", taskTitle: "Optional Description", taskDescription: "", priority: Priority.low),
-            Task(timestamp: "10:00pm", taskTitle: "Third Task", taskDescription: "The third task has medium priority.", priority: Priority.medium),
-            Task(timestamp: "1:00am", taskTitle: "Fourth Task", taskDescription: "The fourth task has high priority.", priority: Priority.high),
-            Task(timestamp: "3:00am", taskTitle: "Fifth Task!", taskDescription: "This task has the highest priority.", priority: Priority.asap),
-            Task(timestamp: "12:00am", taskTitle: "Sixth Task", taskDescription: "Attmpting...", priority: Priority.medium),
-            Task(timestamp: "11:00pm", taskTitle: "Seventh Task", taskDescription: "Attmpting...", priority: Priority.medium),
-            Task(timestamp: "6:00am", taskTitle: "Eighth Task", taskDescription: "Attmpting...", priority: Priority.asap),
-            Task(timestamp: "7:00pm", taskTitle: "Ninth Task", taskDescription: "Attmpting...", priority: Priority.low),
-            Task(timestamp: "7:00am", taskTitle: "Tenth Task", taskDescription: "Attmpting...", priority: Priority.asap),
-            Task(timestamp: "2:00am", taskTitle: "Task #11", taskDescription: "Attmpting...", priority: Priority.high),
-            Task(timestamp: "8:00pm", taskTitle: "Task #12", taskDescription: "Attmpting...", priority: Priority.low),
-            Task(timestamp: "4:00am", taskTitle: "Task #13", taskDescription: "Attmpting...", priority: Priority.asap),
-            Task(timestamp: "5:00am", taskTitle: "Task #14", taskDescription: "Attmpting...", priority: Priority.asap),
-            Task(timestamp: "9:00pm", taskTitle: "Task #15", taskDescription: "Attmpting...", priority: Priority.low)
-        ]
+    
+    var tasks: [Task] = []
     
     override func loadView() {
         super.loadView()
         
         self.configureView()
         self.setupTableView()
-        
+        self.getTasks()
     }
 
    
@@ -55,7 +41,8 @@ class Home: UIViewController {
     fileprivate func configureView() {
         view.backgroundColor = UIColor.blue
         self.title = "Home"
-        self.navigationItem.setRightBarButton(UIBarButtonItem(barButtonSystemItem: .add, target: self, action: nil), animated: true)
+        let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(handlePresentingVC))
+        self.navigationItem.setRightBarButton(addBtn, animated: true)
         view.backgroundColor = UIColor.lightGray
         safeArea = view.layoutMarginsGuide
         
@@ -72,7 +59,76 @@ class Home: UIViewController {
         tableView.register(HomeCell.self, forCellReuseIdentifier: HomeCell.identifier)
         self.tableView.rowHeight = 150
         self.tableView.separatorColor = .clear
-        self.tableView.backgroundColor = UIColor.lightGray      }
+        self.tableView.backgroundColor = UIColor.systemGray6
+        self.tableView.refreshControl = UIRefreshControl()
+        self.tableView.refreshControl?.addTarget(self, action: #selector(pullToRefresh), for: .valueChanged)
+        
+    }
+    
+    
+    fileprivate func getTasks() {
+        self.tasks.removeAll()
+        let database = Firestore.firestore()
+        
+        database.collection("tasks").getDocuments { (snapshot, error) in
+            if error != nil {
+               print(error!)
+            }else{
+                for doc in (snapshot?.documents)! {
+                    
+                    let taskname = doc.data()["taskname"] as! String
+                    let timestamp = doc.data()["timestamp"] as! String
+                    let priorityString = doc.data()["priority"] as! String
+                    let priority = self.getPriority(priorityString: priorityString)
+                    
+                    if let taskdescription = doc.data()["taskdescription"] as? String {
+                        let newTask = Task(timestamp: timestamp, taskTitle: taskname, taskDescription: taskdescription, priority: priority)
+                        self.tasks.append(newTask)
+                    }else{
+                        let newTask = Task(timestamp: timestamp, taskTitle: taskname, taskDescription: "", priority: priority)
+                        self.tasks.append(newTask)
+                    }
+                    
+                    DispatchQueue.main.async {
+                        self.tableView.refreshControl?.endRefreshing()
+                        self.tableView.reloadData()
+                    }
+                    
+                }
+            }
+            
+            
+        }
+
+        
+    }
+    
+    private func getPriority(priorityString: String) -> Priority {
+        var priority: Priority
+        switch priorityString {
+        case "Low":
+            priority = .low
+        case "Medium":
+            priority = .medium
+        case "High":
+            priority = .high
+        case "ASAP":
+            priority = .asap
+        default:
+            priority = .low
+        }
+        return priority
+    }
+    
+    @objc func pullToRefresh() {
+        self.getTasks()
+    }
+    
+    @objc func handlePresentingVC() {
+        let vc = NewTask()
+        vc.modalPresentationStyle = .formSheet
+        present(vc, animated: true, completion: nil)
+      }
 }
 
 extension Home: UITableViewDataSource {
@@ -83,7 +139,9 @@ extension Home: UITableViewDataSource {
     let cell = tableView.dequeueReusableCell(withIdentifier: HomeCell.identifier, for: indexPath) as! HomeCell
     cell.backgroundColor = .clear
     let task = self.tasks[indexPath.row]
-    cell.set(task: task)
+        cell.set(task: task)
+    
+    
     
     return cell
   }
